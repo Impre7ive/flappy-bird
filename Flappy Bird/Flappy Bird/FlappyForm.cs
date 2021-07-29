@@ -25,6 +25,7 @@ namespace Flappy_Bird {
         private int topLimit = 0;
         private int groundPaddingY = 476;
         private int artifactReserve = 10;
+        private int groundCount = 3;
 
         public FlappyForm() {
             InitializeComponent();
@@ -61,7 +62,7 @@ namespace Flappy_Bird {
 
             if ((groundClones.Peek()).Left < -mainMenuGround.Width) {
                 PictureBox tmp = groundClones.Dequeue();
-                tmp.Left += groundClones.Count * tmp.Width - artifactReserve;
+                tmp.Left += groundCount * tmp.Width - artifactReserve;
                 groundClones.Enqueue(tmp);
             }
 
@@ -110,13 +111,13 @@ namespace Flappy_Bird {
             //replace start element next to the last
             if ((groundClones.Peek()).Left < -mainMenuGround.Width) {
                 PictureBox tmp = groundClones.Dequeue();
-                tmp.Left += groundClones.Count * tmp.Width - artifactReserve;
+                tmp.Left += groundCount * tmp.Width - artifactReserve;
                 groundClones.Enqueue(tmp);
             }
         }
 
         private void InitMenuGround() {
-            for (int i = 0; i <= 2; ++i) {
+            for (int i = 0; i < groundCount; ++i) {
                 PictureBox tmp = new PictureBox();
                 tmp.Image = global::Flappy_Bird.Properties.Resources.ground;
                 
