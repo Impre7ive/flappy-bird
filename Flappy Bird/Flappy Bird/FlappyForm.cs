@@ -10,23 +10,31 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Flappy_Bird {
-    public partial class Form1 : Form {
+    public partial class FlappyForm : Form {
         private int SceneSpeed = 3;
         private bool passed = false;
         private int gravity = 3;
+        private int jumpGravity = -10;
+        private int standartGravity = 3;
         private int score = 0;
         private bool isGameProcess = false;
         private Queue<PictureBox> groundClones = new Queue<PictureBox>();
+        private Point flappyBirdStartPoint = new Point(188, 239);
+        private Size groundBlockSize = new Size(337, 101);
+        private int outOfwindowPoint = 550;
+        private int topLimit = 0;
+        private int groundPaddingY = 476;
+        private int artifactReserve = 10;
 
-        public Form1() {
+        public FlappyForm() {
             InitializeComponent();
             InitMenuGround();
         }
 
         private void GameTimerEvent(object sender, EventArgs e) {
-            if (pipeBottom.Left < -100) {
-                pipeBottom.Left = 550;
-                pipeTop.Left = 550;
+            if (pipeBottom.Left < -pipeBottom.Width) {
+                pipeBottom.Left = outOfwindowPoint;
+                pipeTop.Left = outOfwindowPoint;
             }
 
             if (!isGameProcess)
@@ -53,16 +61,16 @@ namespace Flappy_Bird {
 
             if ((groundClones.Peek()).Left < -mainMenuGround.Width) {
                 PictureBox tmp = groundClones.Dequeue();
-                tmp.Left += 3*tmp.Width-10;
+                tmp.Left += groundClones.Count * tmp.Width - artifactReserve;
                 groundClones.Enqueue(tmp);
             }
 
 
         }
-        private void GameElementsMove() {
 
-            if (flappyBird.Bounds.IntersectsWith(pipeBottom.Bounds) ||
-            flappyBird.Bounds.IntersectsWith(pipeTop.Bounds)) {
+        private void GameElementsMove() {
+            if (flappyBird.Bounds.IntersectsWith(pipeBottom.Bounds) 
+                || flappyBird.Bounds.IntersectsWith(pipeTop.Bounds)) {
                 EndGame();
             }
 
@@ -72,14 +80,14 @@ namespace Flappy_Bird {
                 }
             }
 
+            if (flappyBird.Top < topLimit)
+                EndGame();
 
-            foreach (PictureBox pic in groundClones) {
+            foreach (PictureBox pic in groundClones) 
                 pic.Left -= SceneSpeed;
-            }
-
+            
             pipeBottom.Left -= SceneSpeed;
             pipeTop.Left -= SceneSpeed;
-
             flappyBird.Top += gravity;
 
             //reset pipes
@@ -102,20 +110,24 @@ namespace Flappy_Bird {
             //replace start element next to the last
             if ((groundClones.Peek()).Left < -mainMenuGround.Width) {
                 PictureBox tmp = groundClones.Dequeue();
-                tmp.Left += 3 * tmp.Width - 10;
+                tmp.Left += groundClones.Count * tmp.Width - artifactReserve;
                 groundClones.Enqueue(tmp);
             }
         }
+
         private void InitMenuGround() {
             for (int i = 0; i <= 2; ++i) {
                 PictureBox tmp = new PictureBox();
                 tmp.Image = global::Flappy_Bird.Properties.Resources.ground;
                 
-                if(i == 0) tmp.Location = new System.Drawing.Point(0, 476);
-                else if (i == 1) tmp.Location = new System.Drawing.Point(mainMenuGround.Width, 476);
-                else tmp.Location = new System.Drawing.Point(2 * mainMenuGround.Width, 476);
+                if (i == 0) 
+                    tmp.Location = new System.Drawing.Point(0, groundPaddingY);
+                else if (i == 1) 
+                    tmp.Location = new System.Drawing.Point(mainMenuGround.Width, groundPaddingY);
+                else 
+                    tmp.Location = new System.Drawing.Point(2 * mainMenuGround.Width, groundPaddingY);
                 
-                tmp.Size = new Size(337, 101);
+                tmp.Size = groundBlockSize;
                 tmp.SizeMode = PictureBoxSizeMode.StretchImage;
                 groundClones.Enqueue(tmp);
                 mainMenuPanel.Controls.Add(tmp);
@@ -127,7 +139,6 @@ namespace Flappy_Bird {
         }
 
         private void GameKeyDown(object sender, KeyEventArgs e) {
-            
             if (e.KeyCode == Keys.Space) {
 
                 if (!gameTimer.Enabled) {
@@ -135,14 +146,13 @@ namespace Flappy_Bird {
                     isGameProcess = true;
                 }
                     
-               gravity = -10;
+               gravity = jumpGravity;
             }
         }
 
         private void GameKeyUp(object sender, KeyEventArgs e) {
             if (e.KeyCode == Keys.Space) {
-                gravity = 3;
-               // flappyBird.Top += gravity;
+                gravity = standartGravity;
             }
         }
 
@@ -162,9 +172,6 @@ namespace Flappy_Bird {
         }
 
         private void InitGameProcess() {
-            //setup tubes, ground, bird
-            //setup pause
-
             score = 0;
             gameScore.Text = "Score: " + score.ToString();
 
@@ -174,22 +181,19 @@ namespace Flappy_Bird {
             foreach(var ground in groundClones)
                 gamePanel.Controls.Add(ground);
 
-
             gamePanel.Controls.Add(flappyBird);
             gamePanel.Controls.Add(pipeTop);
             gamePanel.Controls.Add(pipeBottom);
 
+            flappyBird.Location = flappyBirdStartPoint;
             flappyBird.Visible = true;
             pipeTop.SendToBack();
             pipeBottom.SendToBack();
-
-            pipeBottom.Left = 550;
-            pipeTop.Left = 550;
+            pipeBottom.Left = outOfwindowPoint;
+            pipeTop.Left = outOfwindowPoint;
             //Fix for situation when new panel begins visible the click events stop working
             //Form without focus isnt working
             Focus();
         }
-
-
     }
 }

@@ -1,5 +1,5 @@
 ﻿namespace Flappy_Bird {
-    partial class Form1 {
+    partial class FlappyForm {
         /// <summary>
         /// Required designer variable.
         /// </summary>
