@@ -11,12 +11,12 @@ using System.Windows.Forms;
 
 namespace Flappy_Bird {
     public partial class FlappyForm : Form {
-        private int SceneSpeed = 3;
-        private bool passed = false;
+        private int sceneSpeed = 3;
         private int gravity = 3;
         private int jumpGravity = -10;
         private int standartGravity = 3;
         private int score = 0;
+        private bool passed = false;
         private bool isGameProcess = false;
         private Queue<PictureBox> groundClones = new Queue<PictureBox>();
         private Point flappyBirdStartPoint = new Point(188, 239);
@@ -27,13 +27,26 @@ namespace Flappy_Bird {
         private int artifactReserve = 10;
         private int groundCount = 3;
 
+
         public FlappyForm() {
             InitializeComponent();
             InitMenuGround();
         }
 
+        private bool IsPipeOutOfScreen() {
+            return pipeBottom.Left < -pipeBottom.Width;
+        }
+
+        private void ReplaceGroundInQueue() {
+            if ((groundClones.Peek()).Left < -mainMenuGround.Width) {
+                PictureBox tmp = groundClones.Dequeue();
+                tmp.Left += groundCount * tmp.Width - artifactReserve;
+                groundClones.Enqueue(tmp);
+            }
+        }
+
         private void GameTimerEvent(object sender, EventArgs e) {
-            if (pipeBottom.Left < -pipeBottom.Width) {
+            if (IsPipeOutOfScreen()) {
                 pipeBottom.Left = outOfwindowPoint;
                 pipeTop.Left = outOfwindowPoint;
             }
@@ -44,55 +57,44 @@ namespace Flappy_Bird {
                 GameElementsMove();
         }
 
-        private void MainMenuGroundMove() {
-            foreach (PictureBox pic in groundClones) {
-                pic.Left -= SceneSpeed;
-            }
+        public void MainMenuGroundMove() {
+            pipeBottom.Left -= sceneSpeed;
+            pipeTop.Left -= sceneSpeed;
 
-            pipeBottom.Left -= SceneSpeed;
-            pipeTop.Left -= SceneSpeed;
+            foreach (PictureBox pic in groundClones) 
+                pic.Left -= sceneSpeed;
 
             if (isGameProcess)
                 flappyBird.Top += gravity;
 
-            if (pipeTop.Left < -pipeTop.Width) {
+            if (IsPipeOutOfScreen()) {
                 pipeBottom.Left = mainMenuPanel.Width + pipeTop.Width;
                 pipeTop.Left = mainMenuPanel.Width + pipeTop.Width;
             }
 
-            if ((groundClones.Peek()).Left < -mainMenuGround.Width) {
-                PictureBox tmp = groundClones.Dequeue();
-                tmp.Left += groundCount * tmp.Width - artifactReserve;
-                groundClones.Enqueue(tmp);
-            }
-
-
+            ReplaceGroundInQueue();
         }
 
         private void GameElementsMove() {
-            if (flappyBird.Bounds.IntersectsWith(pipeBottom.Bounds) 
-                || flappyBird.Bounds.IntersectsWith(pipeTop.Bounds)) {
+            if (flappyBird.Bounds.IntersectsWith(pipeBottom.Bounds) || flappyBird.Bounds.IntersectsWith(pipeTop.Bounds)) 
                 EndGame();
-            }
-
-            foreach (PictureBox ground in groundClones) {
-                if (flappyBird.Bounds.IntersectsWith(ground.Bounds)) {
+            
+            foreach (PictureBox ground in groundClones) 
+                if (flappyBird.Bounds.IntersectsWith(ground.Bounds)) 
                     EndGame();
-                }
-            }
-
+                
             if (flappyBird.Top < topLimit)
                 EndGame();
 
             foreach (PictureBox pic in groundClones) 
-                pic.Left -= SceneSpeed;
+                pic.Left -= sceneSpeed;
             
-            pipeBottom.Left -= SceneSpeed;
-            pipeTop.Left -= SceneSpeed;
+            pipeBottom.Left -= sceneSpeed;
+            pipeTop.Left -= sceneSpeed;
             flappyBird.Top += gravity;
 
             //reset pipes
-            if (pipeTop.Left < -pipeTop.Width) {
+            if (IsPipeOutOfScreen()) {
                 pipeBottom.Left = mainMenuPanel.Width + pipeTop.Width;
                 pipeTop.Left = mainMenuPanel.Width + pipeTop.Width;
                 passed = false;
@@ -101,7 +103,7 @@ namespace Flappy_Bird {
             //set new score
             if (flappyBird.Left > pipeTop.Left) {
                 if (!passed) {
-                    score++;
+                    ++score;
                     gameScore.Text = "Score: " + score.ToString();
                 }
 
@@ -109,11 +111,7 @@ namespace Flappy_Bird {
             }
 
             //replace start element next to the last
-            if ((groundClones.Peek()).Left < -mainMenuGround.Width) {
-                PictureBox tmp = groundClones.Dequeue();
-                tmp.Left += groundCount * tmp.Width - artifactReserve;
-                groundClones.Enqueue(tmp);
-            }
+            ReplaceGroundInQueue();
         }
 
         private void InitMenuGround() {
@@ -133,7 +131,7 @@ namespace Flappy_Bird {
                 groundClones.Enqueue(tmp);
                 mainMenuPanel.Controls.Add(tmp);
             }
-
+            //fix with z-indexes
             pipeTop.SendToBack();
             pipeBottom.SendToBack();
             gameNameLabel.SendToBack();
